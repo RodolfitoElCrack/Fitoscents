@@ -1,7 +1,7 @@
 <?php
 // 1. Incluimos configuración
-include_once '../database/cors.php';     
-include_once '../database/database.php';
+include_once '../config/cors.php';
+include_once '../config/database.php';
 
 // 2. Conexión
 $database = new Database();

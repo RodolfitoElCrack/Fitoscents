@@ -5,8 +5,7 @@ include_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
-// Ordenamos alfabéticamente (ASC) para que sea fácil buscar en la lista
-$query = "SELECT * FROM marcas ORDER BY nombreMarca ASC";
+$query = "SELECT * FROM insumosDecants ORDER BY capacidadMl ASC";
 
 try {
     $stmt = $db->prepare($query);
@@ -14,23 +13,24 @@ try {
     $num = $stmt->rowCount();
 
     if($num > 0) {
-        $marcas_arr = array();
-        $marcas_arr["records"] = array();
+        $insumos_arr = array();
+        $insumos_arr["records"] = array();
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             extract($row);
-            $marca_item = array(
-                "idMarca" => $idMarca,
-                "nombreMarca" => $nombreMarca
+            $item = array(
+                "idInsumo" => $idInsumo,
+                "nombreInsumo" => $nombreInsumo,
+                "capacidadMl" => $capacidadMl,
+                "cantidadStock" => $cantidadStock,
+                "costoUnitario" => $costoUnitario
             );
-            array_push($marcas_arr["records"], $marca_item);
+            array_push($insumos_arr["records"], $item);
         }
-
         http_response_code(200);
-        echo json_encode($marcas_arr);
+        echo json_encode($insumos_arr);
     } else {
-        // Si no hay marcas, devolvemos lista vacía pero código 200 (para no romper el frontend)
-        http_response_code(200); 
+        http_response_code(200);
         echo json_encode(array("records" => []));
     }
 } catch (PDOException $e) {

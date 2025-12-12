@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { inventarioService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const Inventory = () => {
-    // 1. Estados (Variables) para guardar los datos
     const [perfumes, setPerfumes] = useState([]);
     const [cargando, setCargando] = useState(true);
+    const [busqueda, setBusqueda] = useState(""); // Variable para lo que escribes en el buscador
 
-    // 2. Función para cargar los datos del backend
+    const navigate = useNavigate();
+
     const cargarPerfumes = async () => {
         try {
             const data = await inventarioService.obtenerPerfumes();
@@ -20,48 +22,92 @@ const Inventory = () => {
         }
     };
 
-    // 3. useEffect: Se ejecuta una vez cuando carga la página
     useEffect(() => {
         cargarPerfumes();
     }, []);
 
+    // Función para filtrar (Buscador)
+    // Convierte todo a minúsculas para que encuentre "dior" aunque escribas "Dior"
+    const perfumesFiltrados = perfumes.filter((perfume) => {
+        const textoBusqueda = busqueda.toLowerCase();
+        return (
+            perfume.nombrePerfume.toLowerCase().includes(textoBusqueda) ||
+            perfume.nombreMarca.toLowerCase().includes(textoBusqueda)
+        );
+    });
+
     return (
         <div className="inventory-page">
-            <h1>📦 Mi Inventario de Perfumes</h1>
+            <h1>📦 Mi Inventario</h1>
             
-            {/* Botón temporal para probar */}
-            <button style={{ marginBottom: '20px', padding: '10px' }}>
-                + Nuevo Perfume
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                {/* Botón Nuevo */}
+                <button 
+                    onClick={() => navigate('/nuevo-perfume')} 
+                    style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#646cff', color: 'white', border: 'none', borderRadius: '5px' }}
+                >
+                    + Nuevo Perfume
+                </button>
+
+                {/* --- AGREGA ESTE BOTÓN --- */}
+                <button 
+                    onClick={() => navigate('/insumos')} 
+                    style={{ 
+                        marginLeft: '10px',
+                        padding: '10px 20px', 
+                        cursor: 'pointer', 
+                        backgroundColor: '#ff9800', // Color naranja para distinguir
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '5px' 
+                    }}
+                >
+                    🧪 Ver Botellas / Insumos
+                </button>
+
+                {/* Buscador */}
+                <input 
+                    type="text" 
+                    placeholder="🔍 Buscar perfume o marca..." 
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    style={{ 
+                        padding: '10px', 
+                        width: '300px', 
+                        borderRadius: '5px', 
+                        border: '1px solid #ccc' 
+                    }}
+                />
+            </div>
 
             {cargando ? (
                 <p>Cargando datos...</p>
             ) : (
                 <div className="table-container">
-                    {perfumes.length === 0 ? (
-                        <p>No hay perfumes registrados. ¡Agrega uno!</p>
+                    {perfumesFiltrados.length === 0 ? (
+                        <p>No se encontraron perfumes.</p>
                     ) : (
-                        <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <table border="1" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
                             <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Marca</th>
-                                    <th>Stock</th>
-                                    <th>Precio Botella</th>
-                                    <th>Tipo</th>
+                                <tr style={{ background: '#333', color: 'white' }}>
+                                    <th style={{ padding: '10px' }}>Nombre</th>
+                                    <th style={{ padding: '10px' }}>Marca</th>
+                                    <th style={{ padding: '10px' }}>Stock</th>
+                                    <th style={{ padding: '10px' }}>Precio</th>
+                                    <th style={{ padding: '10px' }}>Tipo</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {perfumes.map((perfume) => (
+                                {perfumesFiltrados.map((perfume) => (
                                     <tr key={perfume.idPerfume}>
-                                        <td>{perfume.nombrePerfume}</td>
-                                        <td>{perfume.nombreMarca}</td>
-                                        <td>{perfume.cantidadStock}</td>
-                                        <td>${perfume.precioVentaBotella}</td>
-                                        <td>
+                                        <td style={{ padding: '8px' }}>{perfume.nombrePerfume}</td>
+                                        <td style={{ padding: '8px' }}>{perfume.nombreMarca}</td>
+                                        <td style={{ padding: '8px' }}>{perfume.cantidadStock}</td>
+                                        <td style={{ padding: '8px' }}>${perfume.precioVentaBotella}</td>
+                                        <td style={{ padding: '8px' }}>
                                             {perfume.usoParaDecants 
                                                 ? "🧪 Decants" 
-                                                : "🍾 Botella Cerrada"}
+                                                : "🍾 Botella"}
                                         </td>
                                     </tr>
                                 ))}

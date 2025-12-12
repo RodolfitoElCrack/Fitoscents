@@ -1,13 +1,10 @@
 import axios from 'axios';
 
-// Asegúrate que esta ruta coincida con tu carpeta backend
 const API_URL = 'http://localhost/FitoScentsWEB/backend/routes';
 
 const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    }
+    headers: { 'Content-Type': 'application/json' }
 });
 
 export const inventarioService = {
@@ -17,7 +14,6 @@ export const inventarioService = {
             const response = await api.get('/obtenerPerfumes.php'); 
             return response.data;
         } catch (error) {
-            console.error("Error al obtener perfumes:", error);
             return { records: [] };
         }
     },
@@ -26,9 +22,23 @@ export const inventarioService = {
         try {
             const response = await api.post('/guardarPerfume.php', datosPerfume);
             return response.data;
-        } catch (error) {
-            throw error;
-        }
+        } catch (error) { throw error; }
+    },
+
+    // NUEVO: Editar
+    editarPerfume: async (datosPerfume) => {
+        try {
+            const response = await api.post('/editarPerfume.php', datosPerfume);
+            return response.data;
+        } catch (error) { throw error; }
+    },
+
+    // NUEVO: Borrar
+    borrarPerfume: async (idPerfume) => {
+        try {
+            const response = await api.post('/borrarPerfume.php', { idPerfume });
+            return response.data;
+        } catch (error) { throw error; }
     },
 
     // --- MARCAS ---
@@ -36,49 +46,50 @@ export const inventarioService = {
         try {
             const response = await api.get('/obtenerMarca.php');
             return response.data;
-        } catch (error) {
-            console.error("Error al obtener marcas:", error);
-            return { records: [] };
-        }
+        } catch (error) { return { records: [] }; }
     },
 
     guardarMarca: async (nombreMarca) => {
         try {
             const response = await api.post('/guardarMarca.php', { nombreMarca });
             return response.data;
-        } catch (error) {
-            throw error;
-        }
+        } catch (error) { throw error; }
     },
 
-    // --- INSUMOS (BOTELLAS) ---
+    // --- INSUMOS Y VENTAS ---
     obtenerInsumos: async () => {
         try {
-            // CORREGIDO: Ahora está en singular, igual que tu archivo real
-            const response = await api.get('/obtenerInsumos.php');
+            const response = await api.get('/obtenerInsumo.php');
             return response.data;
-        } catch (error) {
-            console.error("Error al obtener insumos:", error);
-            return { records: [] };
-        }
+        } catch (error) { return { records: [] }; }
     },
 
     guardarInsumo: async (datosInsumo) => {
         try {
-            const response = await api.post('/guardarInsumos.php', datosInsumo);
+            const response = await api.post('/guardarInsumo.php', datosInsumo);
             return response.data;
-        } catch (error) {
-            throw error;
-        }
+        } catch (error) { throw error; }
     },
 
     guardarVenta: async (datosVenta) => {
         try {
             const response = await api.post('/guardarVenta.php', datosVenta);
             return response.data;
-        } catch (error) {
-            throw error;
-        }
+        } catch (error) { throw error; }
+    },
+    // --- CLIENTES ---
+    obtenerClientes: async () => {
+        try {
+            const response = await api.get('/obtenerClientes.php');
+            return response.data;
+        } catch (error) { return { records: [] }; }
+    },
+
+    guardarCliente: async (datosCliente) => {
+        try {
+            const response = await api.post('/guardarCliente.php', datosCliente);
+            return response.data;
+        } catch (error) { throw error; }
     }
 };
 

@@ -4,63 +4,42 @@ import { inventarioService } from '../services/api';
 
 const POS = () => {
     const navigate = useNavigate();
-    
+
     const [perfumes, setPerfumes] = useState([]);
-    const [insumos, setInsumos] = useState([]);
     const [busqueda, setBusqueda] = useState("");
     const [carrito, setCarrito] = useState([]);
     const [total, setTotal] = useState(0);
-    const [insumoSeleccionado, setInsumoSeleccionado] = useState({});
 
+    // Cargar solo perfumes (Sin insumos/decants)
     useEffect(() => {
         const cargarDatos = async () => {
             const dataPerfumes = await inventarioService.obtenerPerfumes();
-            const dataInsumos = await inventarioService.obtenerInsumos();
             if(dataPerfumes.records) setPerfumes(dataPerfumes.records);
-            if(dataInsumos.records) setInsumos(dataInsumos.records);
         };
         cargarDatos();
     }, []);
 
+    // Calcular total en tiempo real
     useEffect(() => {
         const suma = carrito.reduce((acc, item) => acc + parseFloat(item.precioVenta || 0), 0);
         setTotal(suma);
     }, [carrito]);
 
     const agregarBotella = (perfume) => {
-        // Detectar si es ajeno (tiene dueño y no es compartido)
+        // Lógica de Socio: ¿Es ajeno?
         const esAjeno = perfume.idSocioDuenio && !perfume.esCompartido;
 
         const item = {
             uniqueId: Date.now(),
             idPerfume: perfume.idPerfume,
             nombre: perfume.nombrePerfume,
-            esDecant: false,
+            esDecant: false, // Siempre falso ahora
             descripcion: esAjeno ? "Botella (Socio)" : "Botella Cerrada",
             precioVenta: perfume.precioVentaBotella,
-            
-            // Datos para lógica de socios
-            esAjeno: esAjeno,
-            montoComision: 0 // Inicia en 0, tú lo editas
-        };
-        setCarrito([...carrito, item]);
-    };
 
-    const agregarDecant = (perfume) => {
-        const idInsumo = insumoSeleccionado[perfume.idPerfume];
-        if(!idInsumo) return alert("Selecciona una botella vacía primero");
-        const insumo = insumos.find(i => i.idInsumo === parseInt(idInsumo));
-        
-        const item = {
-            uniqueId: Date.now(),
-            idPerfume: perfume.idPerfume,
-            nombre: perfume.nombrePerfume,
-            esDecant: true,
-            idInsumo: insumo.idInsumo,
-            capacidadMl: insumo.capacidadMl,
-            descripcion: `Decant ${insumo.capacidadMl}ml`,
-            precioVenta: 0,
-            esAjeno: false // Los decants usualmente son tuyos, pero se puede ajustar
+            // Datos financieros para el backend
+            esAjeno: esAjeno,
+            montoComision: 0 // Inicia en 0, tú decides cuánto cobrar si es ajeno
         };
         setCarrito([...carrito, item]);
     };
@@ -77,22 +56,22 @@ const POS = () => {
 
     const handleCobrar = async () => {
         if(carrito.length === 0) return alert("Carrito vacío");
-        if(!confirm(`Total: $${total}\n¿Confirmar venta?`)) return;
+        if(!confirm(`Total a cobrar: $${total}\n¿Confirmar venta?`)) return;
 
         const ventaData = {
-            idCliente: null,
+            idCliente: null, // Venta mostrador
             totalVenta: total,
             items: carrito
         };
 
         try {
             await inventarioService.guardarVenta(ventaData);
-            alert("✅ Venta y comisiones registradas");
+            alert("✅ Venta registrada correctamente");
             setCarrito([]);
             navigate('/');
         } catch (error) {
             console.error(error);
-            alert("❌ Error al procesar");
+            alert("❌ Error al procesar venta");
         }
     };
 
@@ -103,8 +82,8 @@ const POS = () => {
 
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '60% 40%', height: '100vh', fontFamily: 'Arial, sans-serif' }}>
-            
-            {/* IZQUIERDA: CATÁLOGO */}
+
+            {/* IZQUIERDA: CATÁLOGO DE BOTELLAS */}
             <div style={{ padding: '20px', overflowY: 'auto', background: '#222', color: 'white' }}>
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                     <button onClick={() => navigate('/')} style={{ background: '#444', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }}>🏠 Salir</button>
@@ -120,71 +99,58 @@ const POS = () => {
                         <div key={perfume.idPerfume} style={{ background: '#333', padding: '15px', borderRadius: '10px', border: perfume.idSocioDuenio ? '1px solid #e91e63' : '1px solid #444' }}>
                             <h3 style={{ margin: '0 0 5px 0', fontSize: '1em' }}>{perfume.nombrePerfume}</h3>
                             <p style={{ color: '#aaa', fontSize: '0.8em', margin: 0 }}>{perfume.nombreMarca}</p>
-                            
-                            {/* Etiqueta de Dueño */}
-                            {perfume.esCompartido && <span style={{fontSize:'0.7em', background:'#ff9800', color:'black', padding:'2px 5px', borderRadius:'3px'}}>🤝 Compartido</span>}
-                            {perfume.idSocioDuenio && !perfume.esCompartido && <span style={{fontSize:'0.7em', background:'#e91e63', color:'white', padding:'2px 5px', borderRadius:'3px'}}>👤 Del Socio</span>}
+
+                            {/* Etiquetas Visuales */}
+                            {perfume.esCompartido && <span style={{fontSize:'0.7em', background:'#ff9800', color:'black', padding:'2px 5px', borderRadius:'3px', display:'inline-block', marginTop:'5px'}}>🤝 Compartido 50/50</span>}
+                            {perfume.idSocioDuenio && !perfume.esCompartido && <span style={{fontSize:'0.7em', background:'#e91e63', color:'white', padding:'2px 5px', borderRadius:'3px', display:'inline-block', marginTop:'5px'}}>👤 Del Socio</span>}
 
                             <button 
                                 onClick={() => agregarBotella(perfume)}
-                                style={{ width: '100%', marginTop: '10px', padding:'8px', background: '#007bff', color:'white', border:'none', borderRadius:'5px', cursor:'pointer' }}
+                                style={{ width: '100%', marginTop: '15px', padding:'10px', background: '#007bff', color:'white', border:'none', borderRadius:'5px', cursor:'pointer', fontWeight:'bold' }}
                             >
-                                🍾 Botella (${perfume.precioVentaBotella})
+                                Vender Botella (${perfume.precioVentaBotella})
                             </button>
-
-                            {perfume.usoParaDecants && (
-                                <div style={{ marginTop: '10px', borderTop: '1px solid #555', paddingTop: '5px' }}>
-                                    <select 
-                                        style={{ width: '100%', marginBottom: '5px', padding: '5px' }}
-                                        onChange={(e) => setInsumoSeleccionado({...insumoSeleccionado, [perfume.idPerfume]: e.target.value})}
-                                    >
-                                        <option value="">Medida...</option>
-                                        {insumos.map(ins => <option key={ins.idInsumo} value={ins.idInsumo}>{ins.capacidadMl}ml</option>)}
-                                    </select>
-                                    <button onClick={() => agregarDecant(perfume)} style={{ width: '100%', padding:'5px', background: 'purple', color:'white', border:'none', borderRadius:'5px', cursor:'pointer' }}>
-                                        🧪 Decant
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* DERECHA: TICKET */}
+            {/* DERECHA: TICKET Y COMISIONES */}
             <div style={{ padding: '20px', background: '#1a1a1a', color: 'white', display: 'flex', flexDirection: 'column' }}>
                 <h2 style={{ borderBottom: '1px solid #555', paddingBottom: '10px', margin: '0 0 20px 0' }}>🛒 Ticket de Venta</h2>
-                
+
                 <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {carrito.length === 0 && <p style={{color:'#666', textAlign:'center'}}>Agrega perfumes para vender</p>}
+
                     {carrito.map(item => (
                         <div key={item.uniqueId} style={{ background: '#333', padding: '10px', marginBottom: '10px', borderRadius: '5px' }}>
                             <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'5px' }}>
                                 <strong>{item.nombre}</strong>
                                 <button onClick={() => eliminarDelCarrito(item.uniqueId)} style={{color:'red', background:'none', border:'none', cursor:'pointer', fontSize:'1.2em'}}>✕</button>
                             </div>
-                            <div style={{ fontSize: '0.8em', color: '#ccc', marginBottom: '5px' }}>{item.descripcion}</div>
-                            
+                            <div style={{ fontSize: '0.8em', color: '#ccc', marginBottom: '8px' }}>{item.descripcion}</div>
+
                             <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
                                 {/* PRECIO DE VENTA */}
                                 <div style={{flex:1}}>
-                                    <label style={{fontSize:'0.7em', display:'block'}}>Precio Venta:</label>
+                                    <label style={{fontSize:'0.7em', display:'block', color:'#aaa'}}>Precio Venta:</label>
                                     <input 
                                         type="number" 
                                         value={item.precioVenta} 
                                         onChange={(e) => actualizarItem(item.uniqueId, 'precioVenta', e.target.value)}
-                                        style={{ width: '100%', padding: '5px', background:'#222', border:'1px solid #555', color:'white' }}
+                                        style={{ width: '100%', padding: '8px', background:'#222', border:'1px solid #555', color:'white', borderRadius:'4px' }}
                                     />
                                 </div>
 
-                                {/* COMISIÓN (Solo si es ajeno) */}
+                                {/* COMISIÓN (Solo aparece si el perfume es ajeno) */}
                                 {item.esAjeno && (
                                     <div style={{flex:1}}>
-                                        <label style={{fontSize:'0.7em', display:'block', color:'#4caf50'}}>Tu Comisión:</label>
+                                        <label style={{fontSize:'0.7em', display:'block', color:'#4caf50', fontWeight:'bold'}}>Tu Comisión ($):</label>
                                         <input 
                                             type="number" 
                                             value={item.montoComision} 
                                             onChange={(e) => actualizarItem(item.uniqueId, 'montoComision', e.target.value)}
-                                            style={{ width: '100%', padding: '5px', background:'#1b5e20', border:'1px solid #4caf50', color:'white' }}
+                                            style={{ width: '100%', padding: '8px', background:'#1b5e20', border:'1px solid #4caf50', color:'white', borderRadius:'4px' }}
                                         />
                                     </div>
                                 )}
@@ -202,7 +168,7 @@ const POS = () => {
                         onClick={handleCobrar}
                         style={{ width: '100%', padding: '15px', fontSize: '1.2em', background: '#28a745', color:'white', border:'none', borderRadius:'5px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
-                        💰 COBRAR
+                        💰 COBRAR VENTA
                     </button>
                 </div>
             </div>

@@ -1,14 +1,11 @@
 <?php
-// 1. Incluimos configuración
 include_once '../config/cors.php';
 include_once '../config/database.php';
 
-// 2. Conexión
 $database = new Database();
 $db = $database->getConnection();
 
-// 3. Consulta SQL
-// Usamos LEFT JOIN para traer el "nombreMarca" en lugar de solo el número ID
+// JOIN con marcas para el nombre
 $query = "SELECT p.*, m.nombreMarca 
           FROM perfumes p 
           LEFT JOIN marcas m ON p.idMarca = m.idMarca 
@@ -19,41 +16,37 @@ try {
     $stmt->execute();
     $num = $stmt->rowCount();
 
-    // 4. Verificar si hay resultados
     if($num > 0) {
         $perfumes_arr = array();
-        // "records" será la lista que recibirá React
         $perfumes_arr["records"] = array();
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // extract($row) permite usar $nombreColumna en vez de $row['nombreColumna']
             extract($row);
 
             $perfume_item = array(
                 "idPerfume" => $idPerfume,
                 "nombrePerfume" => $nombrePerfume,
-                "nombreMarca" => $nombreMarca, // Dato útil para mostrar en la lista
+                "nombreMarca" => $nombreMarca,
                 "idMarca" => $idMarca,
                 "mililitrosTotales" => $mililitrosTotales,
                 "cantidadStock" => $cantidadStock,
                 "costoAdquisicion" => $costoAdquisicion,
                 "precioVentaBotella" => $precioVentaBotella,
-                "usoParaDecants" => (bool)$usoParaDecants, // Convertimos a true/false real
+                "usoParaDecants" => (bool)$usoParaDecants,
                 "esCompartido" => (bool)$esCompartido,
-                "rutaImagen" => $rutaImagen
+                // DATO CLAVE PARA COMISIONES:
+                "idSocioDuenio" => $idSocioDuenio 
             );
 
             array_push($perfumes_arr["records"], $perfume_item);
         }
 
-        // Respuesta OK (200)
         http_response_code(200);
         echo json_encode($perfumes_arr);
 
     } else {
-        // No se encontraron datos (404)
-        http_response_code(404);
-        echo json_encode(array("mensaje" => "No se encontraron perfumes."));
+        http_response_code(200); // 200 OK pero vacío para no romper React
+        echo json_encode(array("records" => []));
     }
 } catch (PDOException $e) {
     http_response_code(503);

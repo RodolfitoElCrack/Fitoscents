@@ -65,6 +65,23 @@ const Inventory = () => {
                     🧪 Ver Botellas / Insumos
                 </button>
 
+                {/* Botón para IR A VENDER */}
+                <button 
+                    onClick={() => navigate('/vender')} 
+                    style={{ 
+                        marginLeft: '10px',
+                        padding: '10px 20px', 
+                        cursor: 'pointer', 
+                        backgroundColor: '#28a745', // Verde dinero
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '5px',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    💰 PUNTO DE VENTA
+                </button>
+
                 {/* Buscador */}
                 <input 
                     type="text" 

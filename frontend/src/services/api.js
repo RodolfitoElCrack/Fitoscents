@@ -54,6 +54,7 @@ export const inventarioService = {
     // --- INSUMOS (BOTELLAS) ---
     obtenerInsumos: async () => {
         try {
+            // CORREGIDO: Ahora está en singular, igual que tu archivo real
             const response = await api.get('/obtenerInsumos.php');
             return response.data;
         } catch (error) {
@@ -64,7 +65,16 @@ export const inventarioService = {
 
     guardarInsumo: async (datosInsumo) => {
         try {
-            const response = await api.post('/guardarInsumo.php', datosInsumo);
+            const response = await api.post('/guardarInsumos.php', datosInsumo);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    guardarVenta: async (datosVenta) => {
+        try {
+            const response = await api.post('/guardarVenta.php', datosVenta);
             return response.data;
         } catch (error) {
             throw error;

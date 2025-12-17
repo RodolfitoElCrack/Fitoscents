@@ -5,6 +5,8 @@ import Insumos from './pages/Insumos';
 import POS from './pages/POS'; // <--- 1. IMPORTAR
 import EditPerfume from './pages/EditPerfume';
 import Clientes from './pages/Clientes';
+import Gastos from './pages/Gastos';
+import Finanzas from './pages/Finanzas';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
             <Route path="/vender" element={<POS />} /> 
             <Route path="/editar-perfume" element={<EditPerfume />} />
             <Route path="/clientes" element={<Clientes />} />
+            <Route path="/gastos" element={<Gastos />} />
+            <Route path="/finanzas" element={<Finanzas />} />
           </Routes>
         </main>
       </div>

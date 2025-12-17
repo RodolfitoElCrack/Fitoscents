@@ -59,14 +59,14 @@ export const inventarioService = {
     // --- INSUMOS Y VENTAS ---
     obtenerInsumos: async () => {
         try {
-            const response = await api.get('/obtenerInsumo.php');
+            const response = await api.get('/obtenerInsumos.php');
             return response.data;
         } catch (error) { return { records: [] }; }
     },
 
     guardarInsumo: async (datosInsumo) => {
         try {
-            const response = await api.post('/guardarInsumo.php', datosInsumo);
+            const response = await api.post('/guardarInsumos.php', datosInsumo);
             return response.data;
         } catch (error) { throw error; }
     },
@@ -88,6 +88,35 @@ export const inventarioService = {
     guardarCliente: async (datosCliente) => {
         try {
             const response = await api.post('/guardarCliente.php', datosCliente);
+            return response.data;
+        } catch (error) { throw error; }
+    },
+
+    // --- GASTOS ---
+    obtenerGastos: async () => {
+        try {
+            const response = await api.get('/obtenerGastos.php');
+            return response.data;
+        } catch (error) { return { records: [] }; }
+    },
+
+    guardarGasto: async (datosGasto) => {
+        try {
+            const response = await api.post('/guardarGasto.php', datosGasto);
+            return response.data;
+        } catch (error) { throw error; }
+    },
+
+    obtenerFinanzas: async () => {
+        try {
+            const response = await api.get('/obtenerFinanzas.php');
+            return response.data;
+        } catch (error) { return { totalVentas: 0, totalGastos: 0, deudaSocio: 0 }; }
+    },
+
+    liquidarSocio: async (datosPago) => {
+        try {
+            const response = await api.post('/liquidarSocio.php', datosPago);
             return response.data;
         } catch (error) { throw error; }
     }
